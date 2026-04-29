@@ -1,0 +1,4 @@
+# Shell scripts must always be LF-terminated regardless of platform —
+# bash chokes on CRLF, and `core.autocrlf=true` would otherwise rewrite
+# them on Windows checkouts.
+*.sh text eol=lf
