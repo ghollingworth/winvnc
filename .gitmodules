@@ -1,0 +1,17 @@
+[submodule "neatvnc"]
+	path = neatvnc
+	url = https://github.com/ghollingworth/neatvnc.git
+	branch = windows
+[submodule "aml"]
+	path = aml
+	url = https://github.com/ghollingworth/aml.git
+	branch = windows
+[submodule "deps/libjpeg-turbo"]
+	path = deps/libjpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
+[submodule "deps/pixman"]
+	path = deps/pixman
+	url = https://gitlab.freedesktop.org/pixman/pixman.git
+[submodule "deps/zlib"]
+	path = deps/zlib
+	url = https://github.com/madler/zlib.git
