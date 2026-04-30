@@ -99,19 +99,23 @@ static void on_pointer_event(struct nvnc_client* client, double x,
 	win_input_mouse(x, y, (uint8_t)button_mask);
 }
 
-/* Accept any client-driven desktop resize by retargeting the display's
- * logical size. neatvnc bilinear-scales our 1920x1080 capture to that size
- * on the wire; the actual Windows resolution is unchanged. */
+/* Reject client-driven desktop resize requests.
+ *
+ * noVNC sends SetDesktopSize with the viewport dimensions whenever
+ * `resizeSession` is enabled (Pi Connect sets it). If we accept and apply
+ * the requested width/height as logical_size, neatvnc anisotropically
+ * scales the source 1920x1080 into the request box, which stretches the
+ * image when the viewport's aspect ratio doesn't match the screen's.
+ *
+ * Returning false makes neatvnc reply RFB_RESIZE_STATUS_PROHIBITED, and
+ * noVNC's `scaleViewport` (also enabled by Pi Connect) takes over with
+ * client-side aspect-preserving fit — i.e. letterboxing. */
 static bool on_desktop_layout(struct nvnc_client* client,
 		const struct nvnc_desktop_layout* layout)
 {
 	(void)client;
-	uint16_t w = nvnc_desktop_layout_get_width(layout);
-	uint16_t h = nvnc_desktop_layout_get_height(layout);
-	if (w == 0 || h == 0)
-		return false;
-	nvnc_display_set_logical_size(display, w, h);
-	return true;
+	(void)layout;
+	return false;
 }
 
 static void on_key_event(struct nvnc_client* client, uint32_t keysym,
