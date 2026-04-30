@@ -72,11 +72,21 @@ static uint16_t keysym_to_vk(uint32_t keysym, bool* extended)
 {
 	*extended = false;
 
-	/* Latin-1 printable ASCII */
+	/* Latin-1 printable ASCII: ask the active keyboard layout for the
+	 * VK that produces this character. A naive identity cast happens to
+	 * work for letters (VK_A..VK_Z = 0x41..0x5A) and digits (VK_0..VK_9
+	 * = 0x30..0x39) but breaks for punctuation: '.' (0x2E) collides
+	 * with VK_DELETE, ',' (0x2C) with VK_SNAPSHOT, ';' (0x3B) with
+	 * VK_F1, etc. The client tracks Shift/AltGr separately, so we drop
+	 * the shift-state bits from VkKeyScanW and just return the VK. */
 	if (keysym >= 0x20 && keysym <= 0x7e) {
+		SHORT s = VkKeyScanW((WCHAR)keysym);
+		if (s != -1)
+			return (uint16_t)(s & 0xff);
+		/* No layout mapping — fall through to identity for letters. */
 		uint8_t ch = (uint8_t)keysym;
 		if (ch >= 'a' && ch <= 'z')
-			return ch - 32; /* VK codes are uppercase */
+			return ch - 32;
 		return ch;
 	}
 
@@ -123,6 +133,41 @@ static uint16_t keysym_to_vk(uint32_t keysym, bool* extended)
 	case 0xff14: return VK_SCROLL;
 	case 0xff61: return VK_SNAPSHOT;
 	case 0xff7f: return VK_NUMLOCK;
+
+	/* Keypad. The browser sends KP_<digit> keysyms when the client's
+	 * NumLock is on, and KP_Home/Up/Left/etc. when it's off — distinct
+	 * from the regular cursor-block keysyms above. Numpad VKs do not
+	 * use KEYEVENTF_EXTENDEDKEY (extended is for the dedicated cursor
+	 * block); the only exception is KP_Enter, which shares VK_RETURN
+	 * with the main Enter and is distinguished by the extended bit. */
+	case 0xff8d: *extended = true; return VK_RETURN; /* KP_Enter */
+	case 0xff95: return VK_HOME;                     /* KP_Home (numpad 7) */
+	case 0xff96: return VK_LEFT;                     /* KP_Left (numpad 4) */
+	case 0xff97: return VK_UP;                       /* KP_Up   (numpad 8) */
+	case 0xff98: return VK_RIGHT;                    /* KP_Right(numpad 6) */
+	case 0xff99: return VK_DOWN;                     /* KP_Down (numpad 2) */
+	case 0xff9a: return VK_PRIOR;                    /* KP_PgUp (numpad 9) */
+	case 0xff9b: return VK_NEXT;                     /* KP_PgDn (numpad 3) */
+	case 0xff9c: return VK_END;                      /* KP_End  (numpad 1) */
+	case 0xff9d: return VK_CLEAR;                    /* KP_Begin(numpad 5) */
+	case 0xff9e: return VK_INSERT;                   /* KP_Insert(numpad 0) */
+	case 0xff9f: return VK_DELETE;                   /* KP_Delete(numpad .) */
+	case 0xffaa: return VK_MULTIPLY;                 /* KP_Multiply */
+	case 0xffab: return VK_ADD;                      /* KP_Add */
+	case 0xffac: return VK_SEPARATOR;                /* KP_Separator */
+	case 0xffad: return VK_SUBTRACT;                 /* KP_Subtract */
+	case 0xffae: return VK_DECIMAL;                  /* KP_Decimal */
+	case 0xffaf: *extended = true; return VK_DIVIDE; /* KP_Divide */
+	case 0xffb0: return VK_NUMPAD0;
+	case 0xffb1: return VK_NUMPAD1;
+	case 0xffb2: return VK_NUMPAD2;
+	case 0xffb3: return VK_NUMPAD3;
+	case 0xffb4: return VK_NUMPAD4;
+	case 0xffb5: return VK_NUMPAD5;
+	case 0xffb6: return VK_NUMPAD6;
+	case 0xffb7: return VK_NUMPAD7;
+	case 0xffb8: return VK_NUMPAD8;
+	case 0xffb9: return VK_NUMPAD9;
 	}
 
 	return 0;
