@@ -71,9 +71,9 @@ static LONG WINAPI crash_handler(EXCEPTION_POINTERS* info)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-static void on_client_cleanup(struct nvnc_client* client)
+static void on_client_cleanup(void* userdata)
 {
-	(void)client;
+	(void)userdata;
 	fprintf(stderr, "[winvnc] client disconnected\n");
 	fflush(stderr);
 	if (stdio_mode) {
@@ -89,7 +89,7 @@ static void on_client_new(struct nvnc_client* client)
 {
 	fprintf(stderr, "[winvnc] client connected\n");
 	fflush(stderr);
-	nvnc_set_client_cleanup_fn(client, on_client_cleanup);
+	nvnc_client_set_userdata(client, NULL, on_client_cleanup);
 }
 
 static void on_pointer_event(struct nvnc_client* client, double x,
