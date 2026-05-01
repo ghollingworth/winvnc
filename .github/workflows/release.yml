@@ -1,0 +1,56 @@
+name: Release winvnc
+
+# Tag-driven release: pushing a tag like `v0.10` to the `windows` branch
+# triggers a cross-build of winvnc.exe on Ubuntu via MinGW, computes its
+# SHA-256, and publishes both as assets on a GitHub release.
+#
+# The connect-go-win Pi Connect installer pins a specific tag in
+# installer/winvnc-version.txt and downloads the corresponding winvnc.exe
+# at MSI build time. By convention, tag from the `windows` branch only.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            gcc-mingw-w64-x86-64 \
+            meson \
+            ninja-build \
+            cmake \
+            pkg-config
+
+      - name: Build static deps (aml, pixman, libjpeg-turbo, zlib)
+        run: ./setup-prefix.sh
+
+      - name: Build winvnc.exe
+        run: ./build-win.sh
+
+      - name: Compute SHA-256
+        working-directory: build
+        run: sha256sum winvnc.exe > winvnc.exe.sha256
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "winvnc $GITHUB_REF_NAME" \
+            --generate-notes \
+            build/winvnc.exe \
+            build/winvnc.exe.sha256

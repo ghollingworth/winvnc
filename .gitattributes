@@ -2,3 +2,7 @@
 # bash chokes on CRLF, and `core.autocrlf=true` would otherwise rewrite
 # them on Windows checkouts.
 *.sh text eol=lf
+
+# GitHub Actions workflows must be LF; the runner refuses CRLF.
+*.yml text eol=lf
+*.yaml text eol=lf
