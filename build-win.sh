@@ -15,7 +15,7 @@ NEATVNC="$SCRIPT_DIR/neatvnc"
 AML="$SCRIPT_DIR/aml"
 WINVNC="$SCRIPT_DIR"
 
-CFLAGS="-O2 -Wall -std=gnu11"
+CFLAGS="-O2 -Wall -std=gnu11 -D_WIN32_WINNT=0x0600"
 CFLAGS="$CFLAGS -I$PREFIX/include -I$PREFIX/include/aml1 -I$PREFIX/include/pixman-1"
 CFLAGS="$CFLAGS -I$NEATVNC/include -I$AML/include"
 CFLAGS="$CFLAGS -I$NEATVNC/include/compat -I$NEATVNC/include/compat"
