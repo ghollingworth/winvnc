@@ -1,0 +1,29 @@
+name: Upstream dependency status
+
+# Weekly drift report: for each bundled C dependency (neatvnc, aml, pixman,
+# libjpeg-turbo, zlib), compares the SHA we have pinned against upstream's
+# default branch and posts a snapshot to a single rolling tracking issue
+# (label: `upstream-status`). The issue body is replaced each week — GitHub
+# preserves edit history if you need a timeline.
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'   # Mondays 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Run upstream check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/upstream-status.sh
